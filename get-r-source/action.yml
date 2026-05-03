@@ -1,0 +1,24 @@
+name: 'Download Source'
+description: 'Download R source code'
+inputs:
+  version:
+    description: 'Which source code to download'
+    default: 'devel'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download R-${{inputs.version}}
+      shell: bash
+      run: |
+        if [ "${{inputs.version}}" = "devel" ]; then
+        url="https://cran.rstudio.com/src/base-prerelease/R-devel.tar.gz"
+        elif [ "${{inputs.version}}" = "next" ] || [ "${{inputs.version}}" = "patched" ]; then
+        url="https://cran.rstudio.com/src/base-prerelease/R-patched.tar.gz"
+        else
+        url="https://cran.rstudio.com/src/base/R-4/R-${{inputs.version}}.tar.gz"
+        fi
+        echo "Downloading $url"
+        curl --retry 3 --fail-with-body -sSL $url -o r-base.tar.gz
+        MSYS="winsymlinks:lnk" tar -xf r-base.tar.gz --strip-components=1
+        rm -f r-base.tar.gz
