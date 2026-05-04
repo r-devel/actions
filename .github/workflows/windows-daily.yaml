@@ -34,7 +34,7 @@ jobs:
       uses: r-devel/actions/setup-windows-tools@main
 
     - name: Build R-base
-      uses: r-devel/actions/build-r@main
+      uses: r-devel/actions/build-r-windows@main
 
     - name: Rename and Test Installer
       run: |

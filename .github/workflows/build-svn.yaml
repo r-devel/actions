@@ -27,7 +27,7 @@ jobs:
       uses: r-devel/actions/setup-windows-tools@main
 
     - name: Build R-base
-      uses: r-devel/actions/build-r@main
+      uses: r-devel/actions/build-r-windows@main
 
     - name: Test Installer
       run: |
@@ -38,7 +38,7 @@ jobs:
     - name: Save installer
       uses: actions/upload-artifact@v7
       with:
-        name: R-svn-${{matrix.arch}}
+        name: Win-installer-${{matrix.arch}}
         path: src/gnuwin32/installer/R-*.exe
 
     - name: Run checks
