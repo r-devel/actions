@@ -98,9 +98,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: [ 'macOS-26', 'macOS-15-intel' ]
+        OS: [ 'macOS-26', 'macOS-26-intel' ]
     runs-on: ${{matrix.OS}}
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       R_TEXI2DVICMD: emulation
     steps:
