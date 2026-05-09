@@ -21,7 +21,7 @@ jobs:
         arch: [ 'x86_64', 'aarch64']
     steps:
     - name: Checkout
-      uses: r-devel/actions/checkout@main
+      uses: r-devel/actions/checkout@testwin
 
     - name: Setup Build Tooling
       uses: r-devel/actions/setup-windows-tools@main

@@ -17,11 +17,7 @@ runs:
 
     - name: Prepare source
       run: |
-        $GITHUB_ACTION_PATH/git-svn-info.sh > SVNINFO
+        $GITHUB_ACTION_PATH/git-svn-info.sh > SVN-REVISION
         tools/fetch-recommended
       shell: bash
 
-    - name: Fix svn-info for Windows
-      if: runner.os == 'windows'
-      run: sed -i.bak "s|GIT =.*|GIT = $(cygpath -u $GITHUB_ACTION_PATH)/git-svn-info.sh|" src/include/Makefile.win
-      shell: bash
