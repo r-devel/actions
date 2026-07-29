@@ -3,7 +3,11 @@ runs:
   steps:
     - name: Apply ARM64 patch
       if: runner.arch == 'ARM64'
-      run: git apply -v "$GITHUB_ACTION_PATH/winarm64.patch"
+      run: |
+        git apply -v "$GITHUB_ACTION_PATH/winarm64.patch"
+        if grep -q 'unstable' VERSION; then
+          git apply -v "$GITHUB_ACTION_PATH/winarm64-devel.patch"
+        fi
       shell: bash
 
     - name: Build
