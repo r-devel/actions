@@ -6,6 +6,7 @@ runs:
       run: |
         git apply -v "$GITHUB_ACTION_PATH/winarm64.patch"
         git apply -v "$GITHUB_ACTION_PATH/winarm64-repositories.patch"
+        git apply -v "$GITHUB_ACTION_PATH/winarm64-fc.patch"
       shell: bash
 
     - name: Build
