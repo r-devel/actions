@@ -1,10 +1,10 @@
 runs:
   using: "composite"
   steps:
-    - name: Apply ARM64 patch
+    - name: Apply ARM64 patches
       if: runner.arch == 'ARM64'
       run: |
-        git apply -v "$GITHUB_ACTION_PATH/winarm64.patch"
+        git apply -v "$GITHUB_ACTION_PATH/custom-binaries.patch"
         git apply -v "$GITHUB_ACTION_PATH/winarm64-repositories.patch"
         git apply -v "$GITHUB_ACTION_PATH/winarm64-fc.patch"
       shell: bash
