@@ -7,6 +7,7 @@ runs:
         git apply -v "$GITHUB_ACTION_PATH/custom-binaries.patch"
         git apply -v "$GITHUB_ACTION_PATH/winarm64-repositories.patch"
         git apply -v "$GITHUB_ACTION_PATH/winarm64-fc.patch"
+        curl --retry 3 --fail-with-body -sSL "https://github.com/r-devel/r-svn/pull/321.diff" | git apply -v || true
       shell: bash
 
     - name: Build
