@@ -5,6 +5,10 @@ runs:
       if: runner.arch == 'ARM64'
       run: |
         git apply -v "$GITHUB_ACTION_PATH/custom-binaries.patch"
+        # Upstreamed in R-devel only, remove after R-4.7 release
+        if [ -f src/library/utils/R/unix/mac.install.R ]; then
+          git apply -v "$GITHUB_ACTION_PATH/custom-binaries-backport.patch"
+        fi
         git apply -v "$GITHUB_ACTION_PATH/winarm64-repositories.patch"
         git apply -v "$GITHUB_ACTION_PATH/winarm64-fc.patch"
         curl --retry 3 --fail-with-body -sSL "https://github.com/r-devel/r-svn/pull/321.diff" | git apply -v || true
