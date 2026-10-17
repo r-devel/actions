@@ -56,7 +56,7 @@ jobs:
 
   linux:
     name: Linux
-    runs-on: ubuntu-24.04${{matrix.ARCH == 'arm' && '-arm' || ''}}
+    runs-on: ubuntu-26.04${{matrix.ARCH == 'arm' && '-arm' || ''}}
     container:
       image: ${{matrix.OS}}
     env:
