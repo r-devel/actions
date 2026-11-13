@@ -98,7 +98,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The intel target is being phased out: only build it on pushes, not on pull requests
         OS: ${{ fromJSON(github.event_name == 'pull_request' && '["macOS-26"]' || '["macOS-26", "macOS-26-intel"]') }}
     runs-on: ${{matrix.OS}}
     timeout-minutes: 120
