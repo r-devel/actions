@@ -93,6 +93,56 @@ jobs:
       if: failure()
       run: tail -n100 tests/*.fail || true
 
+  freebsd:
+    name: FreeBSD
+    runs-on: ubuntu-26.04
+    timeout-minutes: 180
+    env:
+      LANG: en_US.UTF-8
+      # The VM has no /etc/localtime so R cannot infer a time zone
+      TZ: UTC
+      DISPLAY: ':99'
+    steps:
+    - name: Checkout
+      uses: r-devel/actions/checkout@main
+
+    - name: Start FreeBSD VM
+      uses: vmactions/freebsd-vm@v1
+      with:
+        release: "15"
+        sync: rsync
+        copyback: false
+        envs: 'LANG TZ DISPLAY'
+        prepare: |
+          pkg install -y bash curl gmake pkgconf gcc perl5 rsync texinfo texlive-base texlive-texmf tex-formats tex-dvipsk xorg-vfbserver \
+          pcre2 icu readline png jpeg-turbo tiff cairo pango libXt libXmu tcl86 tk86 openblas
+
+    - name: Configure
+      shell: freebsd {0}
+      run: |
+        ./configure --enable-R-shlib --with-blas=-lopenblas --with-lapack --disable-java MAKE=gmake FC=gfortran \
+          CPPFLAGS=-I/usr/local/include LDFLAGS=-L/usr/local/lib \
+          --with-tcl-config=/usr/local/lib/tcl8.6/tclConfig.sh --with-tk-config=/usr/local/lib/tk8.6/tkConfig.sh
+
+    - name: Build R
+      shell: freebsd {0}
+      run: gmake
+
+    # Detach Xvfb from the ssh session, otherwise the step never finishes
+    - name: Start Xvfb
+      shell: freebsd {0}
+      run: daemon -f Xvfb $DISPLAY
+
+    - name: Run checks
+      shell: freebsd {0}
+      timeout-minutes: 90
+      run: gmake check-all
+
+    - name: Print failed tests
+      if: failure()
+      shell: freebsd {0}
+      run: tail -n100 tests/*.fail || true
+
   macos:
     name: MacOS
     strategy:
