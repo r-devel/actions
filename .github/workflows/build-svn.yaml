@@ -98,7 +98,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: [ 'macOS-26', 'macOS-26-intel' ]
+        OS: ${{ fromJSON(github.event_name == 'pull_request' && '["macOS-26"]' || '["macOS-26", "macOS-26-intel"]') }}
     runs-on: ${{matrix.OS}}
     timeout-minutes: 120
     env:
