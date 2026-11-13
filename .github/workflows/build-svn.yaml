@@ -67,17 +67,13 @@ jobs:
         CC: [ gcc, clang ]
         OS: [ 'debian:stable', 'debian:testing' ]
         ARCH: [ 'intel', 'arm']
-        include:
-          - CC: gcc
-            FC: gfortran
-          - CC: clang
-            FC: flang
+ 
     steps:
     - name: System dependencies
       run: |
         set -e
         apt-get update -y
-        apt-get install -y ${{matrix.CC}} ${{matrix.FC}} curl locales git rsync xvfb autoconf pkg-config texinfo texlive-latex-extra texlive-fonts-recommended tk8.6-dev dpkg-dev \
+        apt-get install -y ${{matrix.CC == 'clang' ? 'clang flang-23' : 'gcc gfortran'}} curl locales git rsync xvfb autoconf pkg-config texinfo texlive-latex-extra texlive-fonts-recommended tk8.6-dev dpkg-dev \
         libcurl4-openssl-dev libblas-dev libbz2-dev libicu-dev libjpeg-dev liblapack-dev liblzma-dev libncurses5-dev libpcre2-dev libpng-dev libtiff-dev libcairo2-dev libpango1.0-dev libreadline-dev libxt-dev
         localedef -i en_US -f UTF-8 en_US.UTF-8
         echo "LANG=en_US.UTF-8" >> $GITHUB_ENV
