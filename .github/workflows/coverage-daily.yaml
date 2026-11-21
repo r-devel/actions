@@ -1,0 +1,128 @@
+# Measures the coverage of R itself (its R, C and Fortran code) while running
+# `make check-all` on the r-svn mirror, and uploads it to Codecov for
+# r-devel/r-svn. It runs here rather than in r-svn, so nothing is added to the
+# mirror.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+name: Coverage of R-devel
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-26.04
+    # About 2 to 3.5 hours on a 4-core runner
+    timeout-minutes: 360
+    container:
+      image: debian:stable
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+    - name: System dependencies
+      run: |
+        set -e
+        apt-get update -y
+        apt-get install -y gcc g++ make curl ca-certificates gnupg locales git rsync gfortran xvfb autoconf pkg-config texinfo texlive-latex-extra texlive-fonts-recommended tk8.6-dev dpkg-dev lcov \
+        libcurl4-openssl-dev libssl-dev libblas-dev libbz2-dev libicu-dev libjpeg-dev liblapack-dev liblzma-dev libncurses5-dev libpcre2-dev libpng-dev libtiff-dev libcairo2-dev libpango1.0-dev libreadline-dev libxt-dev
+        localedef -i en_US -f UTF-8 en_US.UTF-8
+        echo "LANG=en_US.UTF-8" >> $GITHUB_ENV
+
+    - name: Checkout
+      uses: r-devel/actions/checkout@main
+      with:
+        repository: r-devel/r-svn
+
+    - name: Commit of r-svn
+      id: svn
+      run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Build R with coverage instrumentation
+      uses: r-devel/actions/coverage@main
+      with:
+        step: build
+
+    - name: Install covr
+      uses: r-devel/actions/coverage@main
+      with:
+        step: covr
+
+    - name: Instrument base packages
+      uses: r-devel/actions/coverage@main
+      with:
+        step: instrument
+
+    - name: Run checks
+      uses: r-devel/actions/coverage@main
+      with:
+        step: check
+
+    - name: Collect coverage
+      uses: r-devel/actions/coverage@main
+      with:
+        step: collect
+
+    # Paths in the lcov files are relative to the root of r-svn, and the
+    # coverage is reported for the commit of r-svn that was tested. Each upload
+    # runs if its report exists, also if an earlier upload failed.
+    - name: Upload R coverage
+      if: ${{ !cancelled() && hashFiles('coverage-out/lcov-r.info') != '' }}
+      uses: codecov/codecov-action@v5
+      with:
+        files: coverage-out/lcov-r.info
+        flags: r
+        slug: r-devel/r-svn
+        override_commit: ${{ steps.svn.outputs.sha }}
+        override_branch: main
+        token: ${{ secrets.CODECOV_TOKEN }}
+        disable_search: true
+        fail_ci_if_error: true
+
+    - name: Upload C/C++/Fortran coverage
+      if: ${{ !cancelled() && hashFiles('coverage-out/lcov-c.info') != '' }}
+      uses: codecov/codecov-action@v5
+      with:
+        files: coverage-out/lcov-c.info
+        flags: c
+        slug: r-devel/r-svn
+        override_commit: ${{ steps.svn.outputs.sha }}
+        override_branch: main
+        token: ${{ secrets.CODECOV_TOKEN }}
+        disable_search: true
+        fail_ci_if_error: true
+
+    - name: Save HTML report and check log
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage
+        if-no-files-found: warn
+        path: |
+          coverage-out/html
+          coverage-out/check.log
+
+  # GitHub disables scheduled workflows of repositories without activity for 60
+  # days, as in r-devel/windows-arm64's windows-daily.yaml
+  keep-alive:
+    runs-on: ubuntu-latest
+    needs: coverage
+    if: ${{ always() && github.event_name == 'schedule' }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Update activity timestamp
+        run: |
+          git checkout -B activity-log
+          mkdir -p .github
+          date > .github/last-run.txt
+          git add .github/last-run.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update activity timestamp [skip ci]"
+          git push origin activity-log --force

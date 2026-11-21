@@ -1,0 +1,16 @@
+name: 'Base R Coverage'
+description: 'Run one step of the base R coverage measurement (see base-r-coverage.sh)'
+inputs:
+  step:
+    description: 'One of: build, covr, instrument, check, collect'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run ${{inputs.step}}
+      run: $GITHUB_ACTION_PATH/base-r-coverage.sh ${{inputs.step}}
+      shell: bash
+      env:
+        SRC: ${{github.workspace}}
+        OUT: ${{github.workspace}}/coverage-out
