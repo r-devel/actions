@@ -93,6 +93,56 @@ jobs:
       if: failure()
       run: tail -n100 tests/*.fail || true
 
+  alpine:
+    name: Alpine
+    runs-on: ubuntu-26.04${{matrix.ARCH == 'arm' && '-arm' || ''}}
+    container:
+      image: alpine:latest
+    env:
+      LANG: en_US.UTF-8
+      # Containers have no /etc/localtime so R cannot infer a time zone
+      TZ: UTC
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        ARCH: [ 'intel', 'arm']
+    steps:
+    - name: System dependencies
+      shell: sh
+      run: |
+        apk add bash build-base gfortran perl git curl rsync xvfb-run pkgconf autoconf texinfo tzdata icu-data-full \
+        texlive texmf-dist-latexextra texmf-dist-fontsrecommended font-dejavu \
+        curl-dev readline-dev bzip2-dev xz-dev zstd-dev libdeflate-dev pcre2-dev icu-dev zlib-dev libpng-dev libjpeg-turbo-dev tiff-dev \
+        cairo-dev pango-dev libxt-dev libxmu-dev tcl-dev tk-dev openblas-dev
+
+    # JavaScript actions (i.e. actions/checkout) do not work in Alpine containers on ARM64
+    - name: Checkout
+      run: |
+        git config --global --add safe.directory $PWD
+        git init -q
+        git remote add origin $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
+        git fetch -q --depth 100 origin $GITHUB_SHA
+        git checkout -q FETCH_HEAD
+        echo "Revision: $(git log --grep="git-svn-id" -n1 | grep git-svn | cut -d'@' -f2 | cut -d' ' -f1)" | tee -a SVNINFO | tee -a SVN-REVISION
+        echo "Last Changed Date: $(git log --grep="git-svn-id" -n1 --pretty=format:"%ad" --date=short)" | tee -a SVNINFO | tee -a SVN-REVISION
+        tools/fetch-recommended
+
+    - name: Configure
+      run: ./configure --enable-R-shlib --with-blas=-lopenblas --with-lapack --disable-java
+
+    - name: Build R
+      run: make
+
+    - name: Run checks
+      run: xvfb-run make check-all
+
+    - name: Print failed tests
+      if: failure()
+      run: tail -n100 tests/*.fail || true
+
   macos:
     name: MacOS
     strategy:
