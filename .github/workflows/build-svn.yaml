@@ -145,11 +145,7 @@ jobs:
 
   macos:
     name: MacOS
-    strategy:
-      fail-fast: false
-      matrix:
-        OS: ${{ fromJSON(github.event_name == 'pull_request' && '["macOS-26"]' || '["macOS-26", "macOS-26-intel"]') }}
-    runs-on: ${{matrix.OS}}
+    runs-on: macOS-26
     timeout-minutes: 120
     env:
       R_TEXI2DVICMD: emulation
