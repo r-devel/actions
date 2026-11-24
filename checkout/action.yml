@@ -1,5 +1,9 @@
 name: 'Checkout Source'
 description: 'Checkout R source from the git-svn mirror'
+inputs:
+  repository:
+    description: 'The repository to check out, e.g. r-devel/r-svn from a workflow of another repository'
+    default: ${{ github.repository }}
 
 runs:
   using: "composite"
@@ -13,6 +17,7 @@ runs:
     - name: Checkout
       uses: actions/checkout@v7
       with:
+        repository: ${{ inputs.repository }}
         fetch-depth: 100
 
     - name: Prepare source
